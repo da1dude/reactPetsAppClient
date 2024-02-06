@@ -1,5 +1,5 @@
 // import React, { Component, Fragment } from 'react'
-import React, { useState, Fragment } from 'react'
+import React, { useState, Fragment, useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { v4 as uuid } from 'uuid'
 
@@ -12,18 +12,36 @@ import SignUp from './components/auth/SignUp'
 import SignIn from './components/auth/SignIn'
 import SignOut from './components/auth/SignOut'
 import ChangePassword from './components/auth/ChangePassword'
+import PetShow from './components/pets/PetShow'
+import PetCreate from './components/pets/PetCreate'
 
 const App = () => {
 
-  const [user, setUser] = useState(null)
-  const [msgAlerts, setMsgAlerts] = useState([])
+	const [user, setUser] = useState(null)
+	const [msgAlerts, setMsgAlerts] = useState([])
 
-  console.log('user in app', user)
-  console.log('message alerts', msgAlerts)
-  const clearUser = () => {
-    console.log('clear user ran')
-    setUser(null)
-  }
+	useEffect(() => {
+		// access localStorage
+		const loggedInUser = localStorage.getItem('user')
+
+		if (loggedInUser) {
+			// we need to parse the json string
+			const foundUser = JSON.parse(loggedInUser)
+			// then set that saved user in state
+			setUser(foundUser)
+		}
+	}, [])
+
+	console.log('user in app', user)
+	console.log('message alerts', msgAlerts)
+
+	const clearUser = () => {
+		console.log('clear user ran')
+		// to clear the user saved in local storage
+		localStorage.removeItem('user')
+		// to clear the user saved in state
+		setUser(null)
+	}
 
 	const deleteAlert = (id) => {
 		setMsgAlerts((prevState) => {
@@ -36,7 +54,7 @@ const App = () => {
 		setMsgAlerts(() => {
 			return (
 				[{ heading, message, variant, id }]
-      )
+      		)
 		})
 	}
 
@@ -53,21 +71,35 @@ const App = () => {
 						path='/sign-in'
 						element={<SignIn msgAlert={msgAlert} setUser={setUser} />}
 					/>
-          <Route
-            path='/sign-out'
-            element={
-              <RequireAuth user={user}>
-                <SignOut msgAlert={msgAlert} clearUser={clearUser} user={user} />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path='/change-password'
-            element={
-              <RequireAuth user={user}>
-                <ChangePassword msgAlert={msgAlert} user={user} />
-              </RequireAuth>}
-          />
+					<Route
+						path='/sign-out'
+						element={
+						<RequireAuth user={user}>
+							<SignOut msgAlert={msgAlert} clearUser={clearUser} user={user} />
+						</RequireAuth>
+						}
+					/>
+					<Route
+						path='/change-password'
+						element={
+						<RequireAuth user={user}>
+							<ChangePassword msgAlert={msgAlert} user={user} />
+						</RequireAuth>}
+					/>
+					<Route 
+						path='/create-pet'
+						element={
+							<RequireAuth user={user} >
+								<PetCreate msgAlert={msgAlert} user={user}/>
+							</RequireAuth>
+						}
+					/>
+					<Route 
+						path='pets/:petId'
+						element={
+							<PetShow user={user} msgAlert={msgAlert}/>
+						}
+					/>
 				</Routes>
 				{msgAlerts.map((msgAlert) => (
 					<AutoDismissAlert
